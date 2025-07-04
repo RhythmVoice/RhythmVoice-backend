@@ -5,7 +5,7 @@ const googleUsersTable = pgTable("google_users", {
 	userId: integer('user_id').unique().notNull(),
   googleUserId: varchar('google_user_id', { length: 255 }).unique().notNull(),
   googleDisplayName: varchar('google_display_name', { length: 255 }).notNull(),
-  googleEmail: varchar('google_email', { length: 255 }).unique().notNull(),
+  googleEmail: varchar('google_email', { length: 255 }).notNull(),
   googlePictureUrl: text('google_picture_url'),
 
   createdAt: timestamp("created_at").defaultNow(),

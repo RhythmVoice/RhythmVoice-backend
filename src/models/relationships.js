@@ -1,7 +1,8 @@
 import { relations } from 'drizzle-orm';
-import { usersTable } from '@/models/schemas/users/usersSchema.js';
-import { emailUsersTable } from '@/models/schemas/users/emailUsersSchema.js';
-import { googleUsersTable } from '@/models/schemas/users/googleUsersSchema.js';
+import { usersTable } from '@/models/schemas/usersSchema.js';
+import { emailUsersTable } from '@/models/schemas/emailUsersSchema.js';
+import { googleUsersTable } from '@/models/schemas/googleUsersSchema.js';
+import { lineUsersTable } from '@/models/schemas/lineUsersSchema.js';
 
 // users 表關聯
 export const usersSignUpRelations = relations(usersTable, ({ one }) => ({
@@ -11,6 +12,10 @@ export const usersSignUpRelations = relations(usersTable, ({ one }) => ({
   }),
   googleAuth: one(googleUsersTable, {
     fields: [googleUsersTable.userId],
+    references: [usersTable.id],
+  }),
+  lineAuth: one(lineUsersTable, {
+    fields: [lineUsersTable.userId],
     references: [usersTable.id],
   }),
 }));
@@ -27,6 +32,14 @@ export const emailUsersRelations = relations(emailUsersTable, ({ one }) => ({
 export const googleUsersRelations = relations(googleUsersTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [googleUsersTable.userId],
+    references: [usersTable.id],
+  }),
+}));
+
+// lineUsers 表關聯
+export const lineUsersRelations = relations(lineUsersTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [lineUsersTable.userId],
     references: [usersTable.id],
   }),
 }));
