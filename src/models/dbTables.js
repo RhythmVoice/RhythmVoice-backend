@@ -1,9 +1,9 @@
-import { roleEnum, providerTypeEnum } from '@/models/enums/index.js';
-import { usersTable } from '@/models/schemas/users/usersSchema.js';
-import { emailUsersTable } from '@/models/schemas/users/emailUsersSchema.js';
-import { googleUsersTable } from '@/models/schemas/users/googleUsersSchema.js';
-import { lineUsersTable } from '@/models/schemas/users/lineUsersSchema.js';
-import { userProfilesTable } from '@/models/schemas/users/userProfilesSchema.js';
+import { roleEnum, providerTypeEnum } from './enums/index.js';
+import { usersTable } from './schemas/users/usersSchema.js';
+import { emailUsersTable } from './schemas/users/emailUsersSchema.js';
+import { googleUsersTable } from './schemas/users/googleUsersSchema.js';
+import { lineUsersTable } from './schemas/users/lineUsersSchema.js';
+import { userProfilesTable } from './schemas/users/userProfilesSchema.js';
 
 import './relationships.js';
 
