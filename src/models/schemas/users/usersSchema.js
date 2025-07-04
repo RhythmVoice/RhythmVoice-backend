@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, date, timestamp, smallint  } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, smallint  } from 'drizzle-orm/pg-core';
 import { roleEnum, providerTypeEnum } from '@/models/enums/index.js';
 
 const usersTable = pgTable("users", {

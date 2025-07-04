@@ -11,6 +11,4 @@ export const enums = {
 export const tables = {
   usersTable,
   emailUsersTable,
-  googleUsersTable,
-  lineUsersTable
 };
