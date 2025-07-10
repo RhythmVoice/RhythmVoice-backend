@@ -32,7 +32,6 @@ const generateAccessToken = (payload) => {
       role: payload.role || 'user',
       providerType: payload.providerType,
       type: 'access',
-      iat: Math.floor(Date.now() / 1000)
     };
 
     return jwt.sign(
@@ -53,7 +52,6 @@ const generateRefreshToken = (payload) => {
       id: payload.id, 
       role: payload.role || 'user', 
       type: 'refresh', 
-      iat: Math.floor(Date.now() / 1000) 
     };
     return jwt.sign(
 			tokenPayload, 
@@ -64,6 +62,26 @@ const generateRefreshToken = (payload) => {
   } catch (error) {
     console.error('生成 Refresh Token 失敗:', error);
     throw new Error('Refresh Token 生成失敗');
+  }
+};
+
+const generateTokenPair = (userPayload) => {
+  try {
+    const accessToken = generateAccessToken(userPayload);
+    const refreshToken = generateRefreshToken(userPayload);
+
+    return {
+      success: true,
+      accessToken,
+      refreshToken
+    };
+  } catch (error) {
+    console.error('生成 Token 對失敗:', error);
+    return {
+      success: false,
+      error: 'TOKEN_GENERATION_FAILED',
+      message: 'Token 生成失敗'
+    };
   }
 };
 
@@ -188,37 +206,14 @@ const getErrorMessage = (error) => {
   }
 };
 
-const generateTokenPair = (userPayload) => {
-  try {
-    const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken({
-      id: userPayload.id,
-      role: userPayload.role
-    });
-
-    return {
-      success: true,
-      accessToken,
-      refreshToken
-    };
-  } catch (error) {
-    console.error('生成 Token 對失敗:', error);
-    return {
-      success: false,
-      error: 'TOKEN_GENERATION_FAILED',
-      message: 'Token 生成失敗'
-    };
-  }
-};
-
 export {
   generateAccessToken,
   generateRefreshToken,
+  generateTokenPair,
   verifyAccessToken,
   verifyRefreshToken,
   refreshAccessToken,
   decodeToken,
   isTokenExpiringSoon,
   getErrorMessage,
-  generateTokenPair
 };
