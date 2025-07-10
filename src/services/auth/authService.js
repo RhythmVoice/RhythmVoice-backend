@@ -1,4 +1,4 @@
-import cookieService from './cookieService.js';
+import { setAuthCookies, clearAuthCookies, getAuthFromCookies, refreshAuthCookies, validateAuthCookies, needsTokenRefresh, validateCSRFToken, updateUserDisplayCookie } from './cookieService.js';
 
 const validateUserInfo = (user) => {
   const requiredFields = ['id', 'username', 'providerType'];
@@ -52,7 +52,7 @@ const loginUser = async (res, user, options = {}) => {
       return validation;
     }
 
-    const cookieResult = cookieService.setAuthCookies(res, user, {
+    const cookieResult = setAuthCookies(res, user, {
       rememberMe: options.rememberMe || false
     });
 
@@ -101,10 +101,10 @@ const loginUser = async (res, user, options = {}) => {
 
 const logoutUser = async (req, res, options = {}) => {
   try {
-    const cookieAuth = cookieService.getAuthFromCookies(req);
+    const cookieAuth = getAuthFromCookies(req);
     const userInfo = cookieAuth.userInfo;
 
-    const clearResult = cookieService.clearAuthCookies(res);
+    const clearResult = clearAuthCookies(res);
 
     if (!clearResult.success) {
       return clearResult;
@@ -126,7 +126,7 @@ const logoutUser = async (req, res, options = {}) => {
     console.error('統一登出處理失敗:', error);
 
     // 即使發生錯誤，也要清除 Cookie
-    cookieService.clearAuthCookies(res);
+    clearAuthCookies(res);
 
     return {
       success: true, // 對用戶來說登出成功
@@ -138,7 +138,7 @@ const logoutUser = async (req, res, options = {}) => {
 
 const attemptTokenRefresh = async (req, res) => {
   try {
-    const cookieAuth = cookieService.getAuthFromCookies(req);
+    const cookieAuth = getAuthFromCookies(req);
     
     if (!cookieAuth.hasRefreshToken) {
       return {
@@ -150,7 +150,7 @@ const attemptTokenRefresh = async (req, res) => {
 
     const latestUserInfo = cookieAuth.userInfo;
 
-    const refreshResult = cookieService.refreshAuthCookies(req, res, latestUserInfo);
+    const refreshResult = refreshAuthCookies(req, res, latestUserInfo);
 
     if (refreshResult.success) {
       logAuthEvent('TOKEN_REFRESHED', {
@@ -158,7 +158,7 @@ const attemptTokenRefresh = async (req, res) => {
         timestamp: new Date().toISOString()
       });
 
-      const newValidation = cookieService.validateAuthCookies(req);
+      const newValidation = validateAuthCookies(req);
       
       return {
         success: true,
@@ -182,7 +182,7 @@ const attemptTokenRefresh = async (req, res) => {
 
 const verifyAuth = async (req, res) => {
   try {
-    const validationResult = cookieService.validateAuthCookies(req);
+    const validationResult = validateAuthCookies(req);
 
     if (!validationResult.success) {
       if (validationResult.needsRefresh) {
@@ -192,7 +192,7 @@ const verifyAuth = async (req, res) => {
       return validationResult;
     }
 
-    if (cookieService.needsTokenRefresh(req)) {
+    if (needsTokenRefresh(req)) {
       const refreshResult = await attemptTokenRefresh(req, res);
       if (refreshResult.success) {
         return refreshResult;
@@ -216,12 +216,12 @@ const verifyAuth = async (req, res) => {
 };
 
 const validateCSRF = (req) => {
-  return cookieService.validateCSRFToken(req);
+  return validateCSRFToken(req);
 };
 
 const updateUserInfo = (res, updatedUserInfo) => {
   try {
-    const updateResult = cookieService.updateUserDisplayCookie(res, updatedUserInfo);
+    const updateResult = updateUserDisplayCookie(res, updatedUserInfo);
 
     if (updateResult.success) {
       logAuthEvent('USER_INFO_UPDATED', {
