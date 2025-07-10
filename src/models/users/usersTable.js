@@ -1,7 +1,7 @@
 import { pgTable, serial, varchar, timestamp } from 'drizzle-orm/pg-core';
-import providerTypeEnum from '../enums/providerTypeEnum.js';
-import roleEnum from '../enums/roleEnum.js';
-import statusEnum from '../enums/statusEnum.js';
+import { providerTypeEnum } from '../enums/providerTypeEnum.js';
+import { roleEnum } from '../enums/roleEnum.js';
+import { statusEnum } from '../enums/statusEnum.js';
 
 
 const usersTable = pgTable("users", {
@@ -11,7 +11,7 @@ const usersTable = pgTable("users", {
 
   role: roleEnum("role").default('user'),
   providerType: providerTypeEnum("provider_type").notNull(),
-  status: statusEnum("status").default(1).notNull(),
+  status: statusEnum("status").notNull(),
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
