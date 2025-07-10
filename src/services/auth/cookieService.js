@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { COOKIE_NAMES, cookieConfig, clearCookieConfig } from '../../config/cookies.js';
-import jwtService from './jwtService.js';
+import { generateTokenPair, verifyAccessToken, refreshAccessToken, isTokenExpiringSoon } from './jwtService.js';
 
 const generateCSRFToken = () => {
   return crypto.randomBytes(32).toString('hex');
@@ -8,7 +8,7 @@ const generateCSRFToken = () => {
 
 const setAuthCookies = (res, user, options = {}) => {
   try {
-    const tokenResult = jwtService.generateTokenPair(user);
+    const tokenResult = generateTokenPair(user);
     
     if (!tokenResult.success) {
       throw new Error(tokenResult.message);
@@ -129,7 +129,7 @@ const refreshAuthCookies = (req, res, latestUserInfo) => {
     }
 
 		const refreshToken = cookieAuth.getRefreshToken();
-    const refreshResult = jwtService.refreshAccessToken(refreshToken, latestUserInfo);
+    const refreshResult = refreshAccessToken(refreshToken, latestUserInfo);
 
     if (!refreshResult.success) {
       return refreshResult;
@@ -173,7 +173,7 @@ const validateAuthCookies = (req) => {
     }
 
 		const authToken = cookieAuth.getAuthToken();
-    const tokenResult = jwtService.verifyAccessToken(authToken);
+    const tokenResult = verifyAccessToken(authToken);
     
     if (!tokenResult.success) {
       return {
@@ -208,7 +208,7 @@ const needsTokenRefresh = (req) => {
     }
 
 		const authToken = cookieAuth.getAuthToken();
-    return jwtService.isTokenExpiringSoon(authToken);
+    return isTokenExpiringSoon(authToken);
   } catch (error) {
     console.error('檢查 token 刷新需求失敗:', error);
     return false;
