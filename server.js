@@ -4,6 +4,8 @@ import cookieParser from 'cookie-parser';
 import { corsOptions } from './src/config/cors.js';
 import './src/config/db.js';
 
+import apiRoutes from './src/routes/apiRoutes.js';
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,6 +13,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
+
+// 統一 API 路由
+app.use('/api', apiRoutes);
 
 // 根路徑
 app.get('/', (req, res) => {
