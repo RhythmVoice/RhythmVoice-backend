@@ -1,4 +1,4 @@
-import { verifyAuth, hasPermission, logAuthEvent } from '../../services/auth/authService.js';
+import { verifyAuth, hasPermission } from '../../services/auth/authService.js';
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -10,26 +10,21 @@ const authMiddleware = async (req, res, next) => {
       path: req.path
     };
 
-    console.log(`[AUTH] 認證請求開始 - ${req.method} ${req.path}`, {
+    console.log(`[AUTH_MW] 認證請求開始 - ${req.method} ${req.path}`, {
       ip: clientInfo.ip,
-      userAgent: clientInfo.userAgent?.substring(0, 100) + '...'
+      userAgent: clientInfo.userAgent?.length > 100 
+        ? clientInfo.userAgent.substring(0, 97) + '...' 
+        : clientInfo.userAgent
     });
 
     const authResult = await verifyAuth(req, res);
 
     if (!authResult.success) {
-      console.log(`[AUTH] 認證失敗 - ${authResult.error}`, {
+      console.error(`[AUTH_MW] 認證失敗 - ${authResult.error}`, {
         ip: clientInfo.ip,
         path: req.path,
         error: authResult.error,
         message: authResult.message
-      });
-
-      logAuthEvent('AUTH_FAILED', {
-        ...clientInfo,
-        error: authResult.error,
-        message: authResult.message,
-        timestamp: new Date().toISOString()
       });
 
       return res.status(401).json({
@@ -40,6 +35,7 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
+    // 設定用戶資訊到 request 物件
     req.user = {
       id: authResult.user.id,
       username: authResult.user.username,
@@ -55,7 +51,7 @@ const authMiddleware = async (req, res, next) => {
     }
 
     if (authResult.refreshed) {
-      console.log(`[AUTH] Token 已自動刷新`, {
+      console.log(`[AUTH_MW] Token 已自動刷新`, {
         userId: req.user.id,
         username: req.user.username
       });
@@ -63,7 +59,7 @@ const authMiddleware = async (req, res, next) => {
 
     const authDuration = Date.now() - startTime;
     
-    console.log(`[AUTH] 認證成功 - ${req.method} ${req.path}`, {
+    console.log(`[AUTH_MW] 認證成功 - ${req.method} ${req.path}`, {
       userId: req.user.id,
       username: req.user.username,
       role: req.user.role,
@@ -72,29 +68,9 @@ const authMiddleware = async (req, res, next) => {
       refreshed: authResult.refreshed || false
     });
 
-    if (process.env.NODE_ENV === 'development') {
-      logAuthEvent('AUTH_SUCCESS', {
-        ...clientInfo,
-        userId: req.user.id,
-        username: req.user.username,
-        role: req.user.role,
-        duration: authDuration,
-        refreshed: authResult.refreshed || false,
-        timestamp: new Date().toISOString()
-      });
-    }
-
     next();
   } catch (error) {
-    console.error('[AUTH] 認證中間件發生未預期錯誤:', error);
-
-    logAuthEvent('AUTH_SYSTEM_ERROR', {
-      ip: req.ip,
-      path: req.path,
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
+    console.error('[AUTH_MW] 認證中間件發生未預期錯誤:', error);
 
     return res.status(500).json({
       success: false,
@@ -143,6 +119,7 @@ const optionalAuthMiddleware = async (req, res, next) => {
   } catch (error) {
     console.error('[OPTIONAL_AUTH] 可選認證發生錯誤:', error);
     
+    // 確保即使出錯也能繼續處理
     req.user = null;
     req.userInfo = null;
     
@@ -155,8 +132,13 @@ const requireRole = (requiredRoles) => {
   
   return (req, res, next) => {
     try {
+      console.log(`[ROLE_CHECK] 檢查角色權限:`, {
+        requiredRoles: roles,
+        userId: req.user?.id || 'anonymous'
+      });
+
       if (!req.user) {
-        console.log(`[ROLE_CHECK] 未認證用戶嘗試存取需要角色 [${roles.join(', ')}] 的資源`);
+        console.warn(`[ROLE_CHECK] 未認證用戶嘗試存取需要角色 [${roles.join(', ')}] 的資源`);
         
         return res.status(401).json({
           success: false,
@@ -170,21 +152,11 @@ const requireRole = (requiredRoles) => {
       const hasRolePermission = roles.some(role => hasPermission(req.user, role));
 
       if (!hasRolePermission) {
-        console.log(`[ROLE_CHECK] 權限不足`, {
+        console.error(`[ROLE_CHECK] 權限不足`, {
           userId: req.user.id,
           userRole: userRole,
           requiredRoles: roles,
           path: req.path
-        });
-
-        logAuthEvent('ACCESS_DENIED', {
-          userId: req.user.id,
-          username: req.user.username,
-          userRole: userRole,
-          requiredRoles: roles,
-          path: req.path,
-          ip: req.ip,
-          timestamp: new Date().toISOString()
         });
 
         return res.status(403).json({
@@ -222,7 +194,12 @@ const requireAdmin = requireRole('admin');
 const requireModerator = requireRole(['moderator', 'admin']);
 
 const getCurrentUser = (req, res, next) => {
+  console.log('[GET_USER] 獲取當前用戶資訊:', { 
+    userId: req.user?.id || 'anonymous' 
+  });
+
   if (!req.user) {
+    console.warn('[GET_USER] 嘗試獲取用戶資訊但未認證');
     return res.status(401).json({
       success: false,
       error: 'AUTHENTICATION_REQUIRED',
@@ -239,6 +216,12 @@ const getCurrentUser = (req, res, next) => {
       isModerator: hasPermission(req.user, 'moderator')
     }
   };
+
+  console.log('[GET_USER] 用戶資訊設定完成:', {
+    userId: req.user.id,
+    isAdmin: res.locals.currentUser.permissions.isAdmin,
+    isModerator: res.locals.currentUser.permissions.isModerator
+  });
 
   next();
 };
