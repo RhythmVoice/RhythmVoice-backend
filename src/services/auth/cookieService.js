@@ -74,10 +74,11 @@ const clearAuthCookies = (res) => {
 
 const getAuthFromCookies = (req) => {
   try {
-    const authToken = req.cookies?.[COOKIE_NAMES.AUTH_TOKEN];
+    const authToken = req.signedCookies?.[COOKIE_NAMES.AUTH_TOKEN];
+    const refreshToken = req.signedCookies?.[COOKIE_NAMES.REMEMBER_ME];
+    
     const userDisplay = req.cookies?.[COOKIE_NAMES.USER_DISPLAY];
     const csrfToken = req.cookies?.[COOKIE_NAMES.CSRF_TOKEN];
-    const refreshToken = req.cookies?.[COOKIE_NAMES.REMEMBER_ME];
 
     let userInfo = null;
     if (userDisplay) {

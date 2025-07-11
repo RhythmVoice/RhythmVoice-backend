@@ -5,7 +5,7 @@ import { logoutUser, attemptTokenRefresh, getAuthStats } from '../services/auth/
 import { generateCSRFToken, clearAuthCookies } from '../services/auth/cookieService.js';
 import { cookieConfig } from '../config/cookies.js';
 
-// import emailAuthRoutes from './auth/emailAuthRoutes.js';
+import emailAuthRoutes from './auth/emailAuthRoutes.js';
 
 const router = express.Router();
 
@@ -13,12 +13,13 @@ const router = express.Router();
 // 全域中間件 - 自動 CSRF Cookie 設置
 // ==========================================
 router.use((req, res, next) => {
-  // 對所有 GET 請求自動設置 CSRF Cookie（如果不存在）
-  if (req.method === 'GET' && !req.cookies.csrf_token) {
+  // 對所有請求自動設置 CSRF Cookie
+  if (!req.cookies.csrf_token) {
     const csrfToken = generateCSRFToken();
     res.cookie('csrf_token', csrfToken, cookieConfig.csrf_token);
     
     console.log('[CSRF_AUTO] 自動設置 CSRF Cookie:', {
+      method: req.method,
       path: req.path,
       ip: req.ip
     });
@@ -243,7 +244,7 @@ router.get('/auth/profile', authMiddleware, getCurrentUser, (req, res) => {
 // ==========================================
 
 // Email 身份驗證路由
-// router.use('/auth/email', emailAuthRoutes);
+router.use('/auth/email', emailAuthRoutes);
 
 // ==========================================
 // 系統管理端點
