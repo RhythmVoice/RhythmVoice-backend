@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // 建立郵件傳送器
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
   secure: process.env.SMTP_SECURE === 'true',
@@ -35,7 +35,7 @@ const verifyEmailConfig = async () => {
 
 const getFrontendUrl = () => {
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:5173';
+    return 'http://localhost:3000';
   }
   return process.env.FRONTEND_URL;
 };
@@ -46,7 +46,7 @@ const generateVerificationToken = () => {
 
 const buildVerificationUrl = (token) => {
   const frontendUrl = getFrontendUrl();
-  return `${frontendUrl}/verify-email?token=${token}`;
+  return `${frontendUrl}/api/auth/email/verify-email/${token}`;
 };
 
 const getVerificationEmailTemplate = (username, verificationUrl, token) => {
@@ -197,7 +197,7 @@ const sendWelcomeEmail = async (email, username) => {
   }
 };
 
-export default {
+export {
   verifyEmailConfig,
   sendVerificationEmail,
   sendWelcomeEmail,

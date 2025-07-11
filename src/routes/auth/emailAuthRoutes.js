@@ -3,7 +3,9 @@ import { createValidationMiddleware } from '../../middlewares/auth/validationMid
 import { signupSchema, loginSchema } from '../../validations/authValidation.js';
 import { csrfProtection, conditionalCSRFProtection, refreshCSRFToken, provideCSRFToken, getCSRFStatus } from '../../middlewares/auth/csrfProtection.js';
 import { authMiddleware, optionalAuthMiddleware, requireRole, requireAdmin, requireModerator, getCurrentUser} from '../../middlewares/auth/authMiddleware.js';
-import { signup, login, verifyEmail, resendVerificationEmail, forgotPassword, initResetPassword, resetPassword } from '../../controllers/auth/emailAuthController.js';
+import { signup, login, verifyEmail, resendVerificationEmail } from '../../controllers/auth/emailAuthController.js';
+
+// import { signup, login, verifyEmail, resendVerificationEmail, forgotPassword, initResetPassword, resetPassword } from '../../controllers/auth/emailAuthController.js';
 
 const router = express.Router();
 
@@ -17,6 +19,6 @@ router.post('/login', csrfProtection, createValidationMiddleware(loginSchema), l
 router.get('/verify-email/:token', verifyEmail);
 
 // 重新發送驗證信
-router.post('/verify-email/resend', authMiddleware, csrfProtection, resendVerificationEmail);
+router.post('/verify-email/resend', csrfProtection, resendVerificationEmail);
 
 export default router;
