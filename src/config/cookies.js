@@ -27,7 +27,7 @@ const cookieConfig = {
     httpOnly: false,                                  
     secure: process.env.NODE_ENV === 'production',     
     sameSite: 'strict',                                
-    maxAge: 30 * 60 * 1000,                          
+    maxAge: 2 * 60 * 60 * 1000,                          
     path: '/',
     signed: false                                     
   },
